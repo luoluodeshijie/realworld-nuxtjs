@@ -1,16 +1,20 @@
 <template>
     <div>
-        <form class="card comment-form">
+        <form v-if="user" @submit.prevent="onSubmit" class="card comment-form">
             <div class="card-block">
-                <textarea class="form-control" placeholder="Write a comment..." rows="3"></textarea>
+                <textarea name="body" v-model="comment.body" class="form-control" placeholder="Write a comment..." rows="3" required></textarea>
             </div>
             <div class="card-footer">
-                <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img"/>
-                <button class="btn btn-sm btn-primary">
+                <img :src="user.image" class="comment-author-img"/>
+                <button class="btn btn-sm btn-primary" :disabled="submitDisabled">
                     Post Comment
                 </button>
             </div>
         </form>
+
+        <p v-else style="display: inherit;">
+            <nuxt-link to="/login">Sign in</nuxt-link> or <nuxt-link to="/register">sign up</nuxt-link> to add comments on this article.
+        </p>
 
         <div
             class="card"
@@ -37,9 +41,9 @@
                     }    
                 }">{{ comment.author.username }}</nuxt-link>
                 <span class="date-posted">{{ comment.createdAt | date('MMM DD, YYYY') }}</span>
-                <span class="mod-options">
-                    <i class="ion-edit"></i>
-                    <i class="ion-trash-a"></i>
+                <span v-if="user && user.username === article.author.username" class="mod-options">
+                    <!-- <i class="ion-edit"></i> -->
+                    <i class="ion-trash-a" @click="onDeleteComment(comment)"></i>
                 </span>
             </div>
         </div>
@@ -47,7 +51,8 @@
 </template>
 
 <script>
-import { getComments } from '@/api/article'
+import { getComments, addComments, deleteComments } from '@/api/article'
+import { mapState } from 'vuex'
 
 export default {
     name: 'ArticleComments',
@@ -59,12 +64,43 @@ export default {
     },
     data () {
         return {
+            comment: {
+                body: ''
+            },
+            submitDisabled: false,
             comments: [] // 评论列表
         }
     },
     async mounted () {
         const { data } = await getComments(this.article.slug)
-        this.comments = data.comments
+        this.comments = data.comments.reverse()
+    },
+    computed: {
+        ...mapState(['user'])
+    },
+    methods: {
+        async onSubmit () {
+            if (!this.comment.body.trim()) return alert('请输入内容')
+
+            this.submitDisabled = true
+            await addComments(this.article.slug, this.comment)
+            // this.comments.unshift({
+            //     body: this.comment.body,
+            //     author: {
+            //         username: this.user.username,
+            //         image: this.user.image
+            //     }
+            // })
+            const { data } = await getComments(this.article.slug)
+            this.comments = data.comments.reverse()
+            this.comment.body = ""
+            this.submitDisabled = false
+        },
+        async onDeleteComment (comment) {
+            await deleteComments(this.article.slug, comment.id)
+            const { data } = await getComments(this.article.slug)
+            this.comments = data.comments.reverse()
+        }
     }
 }
 </script>

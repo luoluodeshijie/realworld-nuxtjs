@@ -58,7 +58,7 @@ export default {
         return {
             aaa: '',
             user: {
-                email: 'lmxlmx@163.com',
+                email: 'lmx@163.com',
                 username: '',
                 password: 'lmxlmxlmx'
             },

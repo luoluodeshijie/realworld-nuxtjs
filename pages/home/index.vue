@@ -63,53 +63,7 @@
                         </ul>
                     </div>
 
-                    <div
-                        class="article-preview"
-                        v-for="article in articles"
-                        :key="article.slug"    
-                    >
-                        <div class="article-meta">
-                            <nuxt-link :to="{
-                                name: 'profile',
-                                params: {
-                                    username: article.author.username
-                                }
-                            }">
-                                <img :src="article.author.image"/>
-                            </nuxt-link>
-                            <div class="info">
-                                <nuxt-link class="author" :to="{
-                                    name: 'profile',
-                                    params: {
-                                        username: article.author.username
-                                    }
-                                }">
-                                    {{ article.author.username}}
-                                </nuxt-link>
-                                <span class="date">{{ article.createdAt | date('MMM DD, YYYY') }}</span>
-                            </div>
-                            <button
-                                class="btn btn-outline-primary btn-sm pull-xs-right"
-                                :class="{
-                                    active: article.favorited
-                                }"
-                                @click="onFavorite(article)"
-                                :disabled="article.favoriteDisabled"
-                            >
-                                <i class="ion-heart"></i> {{ article.favoritesCount }}
-                            </button>
-                        </div>
-                        <nuxt-link :to="{
-                            name: 'article',
-                            params: {
-                                slug: article.slug
-                            }
-                        }" class="preview-link">
-                            <h1>{{ article.title }}</h1>
-                            <p>{{ article.description }}</p>
-                            <span>Read more...</span>
-                        </nuxt-link>
-                    </div>
+                    <ArticleList :articles="articles" />
 
                     <!-- 分页列表 -->
                     <nav>
@@ -179,12 +133,13 @@ import {
 } from '@/api/article'
 import { getTags } from '@/api/tag'
 import { mapState } from 'vuex'
+import ArticleList from './components/article-list.vue'
 
 export default {
     name: 'HomeIndex',
     async asyncData ({ query, store }) {
         const page = Number.parseInt(query.page || 1)
-        const limit = 2
+        const limit = 5
         const { tag } = query
         const tab = query.tab || 'global_feed'
         const loadArticles = store.state.user && tab === 'your_feed' 
@@ -216,6 +171,9 @@ export default {
             tab
         }
     },
+    components: {
+        ArticleList
+    },
     watchQuery: ['page', 'tag', 'tab'],
     computed: {
         ...mapState(['user']),
@@ -238,6 +196,14 @@ export default {
                 article.favoritesCount += 1
             }
             article.favoriteDisabled = false
+        }
+    },
+    head () {
+        return {
+            title: `Home — RealWorld`,
+            meta: [
+                { hid: 'description', name: 'description', content: this.articles.description}
+            ]
         }
     }
 }  

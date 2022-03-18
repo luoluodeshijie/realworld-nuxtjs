@@ -18,7 +18,12 @@
                             <nuxt-link class="nav-link" to="/settings"><i class="ion-gear-a"></i>&nbsp;Settings</nuxt-link>
                         </li>
                         <li class="nav-item">
-                            <nuxt-link class="nav-link" to="/profile/1">
+                            <nuxt-link class="nav-link" :to="{
+                                name: 'profile',
+                                params: {
+                                    username: user.username
+                                }
+                            }">
                                 <img class="user-pic" :src="user.image">{{ user.username }}
                             </nuxt-link>
                         </li>
@@ -37,7 +42,7 @@
         <!-- /顶部导航栏 -->
 
         <!-- 子路由 -->
-        <nuxt />
+        <nuxt v-if="isRouterAlive" />
         <!-- /子路由 -->
 
         <!-- 底部 -->
@@ -73,6 +78,22 @@ export default {
     name: "LayoutIndex",
     computed: {
         ...mapState(['user'])
+    },
+    provide () {
+        return {
+            reload: this.reload
+        }
+    },
+    data () {
+        return {
+            isRouterAlive: true
+        }
+    },
+    methods: {
+        reload () {
+            this.isRouterAlive = false
+            this.$nextTick(() => this.isRouterAlive = true)
+        }
     }
 }
 </script>
